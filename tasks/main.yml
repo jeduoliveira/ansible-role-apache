@@ -1,0 +1,56 @@
+---
+
+- name: "Install httpd"
+  yum:
+    name: httpd
+    state: present
+  when: ansible_os_family == 'RedHat'
+  tags: 
+    - httpd
+
+- name: Start httpd.
+  service:
+    name: httpd
+    state: started
+    enabled: true
+  tags: 
+    - httpd
+
+- name: create httpd directories if it does not exist
+  file:
+    path: "{{ item.www }}"
+    state: directory
+    mode: 0755
+    owner: "{{ httpd_user }}"
+    group: "{{ httpd_group }}"
+  with_items:
+    "{{ httpd_virtualhost }}"
+  tags: 
+    - httpd
+  
+- name: Copy server status conf.
+  template:
+    src: "virtualhost.conf.j2"
+    dest: "/etc/httpd/conf.d/{{ item.domain }}.conf"
+    owner: apache
+    group: apache
+    mode: 0644
+  with_items:
+    "{{ httpd_virtualhost }}" 
+  notify: restart httpd
+  tags: 
+    - httpd
+
+- name: enable servername:80
+  lineinfile:
+    dest: /etc/httpd/conf/httpd.conf
+    regexp: "^#ServerName www.example.com:80"
+    line: "ServerName localhost:80"
+    state: present
+  notify: restart httpd
+  tags: 
+    - httpd
+  
+  
+
+

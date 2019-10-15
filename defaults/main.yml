@@ -1,0 +1,32 @@
+---
+# defaults file for ansible-role-apache
+httpd_require_ips:
+    - 127.0.0.1
+    - ::1
+
+httpd_user: apache
+httpd_group: apache
+
+httpd_server_name_status: 127.0.0.1
+
+httpd_balancer_members_ajp:
+  - ip: 127.0.0.1
+    port: 8009
+    route: routeA
+
+httpd_balancer_members_http:
+  - ip: 127.0.0.1
+    port: 8080
+    route: routeA
+
+httpd_confs:
+    - server_status
+    - virtualhost
+
+httpd_server_name: lumis.com.br
+httpd_server_alias: []
+    
+httpd_virtualhost:
+  - domain: localhost.local
+    alias: localhost
+    www: /opt/htdocs

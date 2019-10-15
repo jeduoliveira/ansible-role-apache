@@ -1,0 +1,59 @@
+# {{ ansible_managed }}
+
+<VirtualHost *:80>
+        {% if item.domain != '' %}
+        ServerName {{ item.domain}}
+        {% endif %}
+
+        {% if item.alias != '' %}
+        ServerAlias {{ item.alias }}    
+        {% endif %}
+
+        DocumentRoot {{ item.www }}
+        DirectoryIndex index.htm
+
+        LogFormat "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"" combied
+        LogFormat "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\"" proxy
+        SetEnvIf X-Forwarded-For "^.*\..*\..*\..*" forwarded
+
+        RewriteEngine on
+        <Directory  {{ item.www }}>
+                Options Indexes FollowSymLinks MultiViews
+                Require all granted
+        </Directory>
+
+        RewriteCond %{REQUEST_FILENAME} !^.*\.wslumis$
+        RewriteCond %{HTTP:Connection} ^.*upgrade.* [NC]
+        RewriteRule ^(.*) $1.wslumis [PT,env=X-lumWebServer:true]
+
+        RewriteCond %{HTTP:Connection} !^.*upgrade.* [NC]
+        RewriteCond %{REQUEST_FILENAME} !^.*\.jsp$
+        RewriteCond %{REQUEST_FILENAME} !^.*\.lumis$
+        RewriteCond %{REQUEST_FILENAME} ^/(.*)
+        RewriteCond {{ item.www }}/%1 !-f
+        RewriteCond {{ item.www }}/%1/index.htm !-f
+        RewriteRule ^(.*) $1.lumis [PT,env=X-lumWebServer:true]
+
+        RequestHeader set X-lumWebServer "apache" env=X-lumWebServer
+        Header set X-UA-Compatible "IE=edge" env=!X-lumWebServer
+
+        <Proxy balancer://ajpcluster>
+            {% for member in httpd_balancer_members_ajp %}
+            BalancerMember ajp://{{ member.ip }}:{{ member.port }} route={{ member.route }} connectiontimeout=30 retry=300
+            {% endfor %}
+        
+        </Proxy>
+
+        <Proxy balancer://wscluster>
+            {% for member in httpd_balancer_members_http %}
+            BalancerMember ws://{{ member.ip }}:{{ member.port }} route={{ member.route }} connectiontimeout=30 retry=300
+            {% endfor %}
+        
+        </Proxy>
+
+        ProxyPreserveHost On
+        ProxyTimeout 600
+
+        ProxyPassMatch ^/(.*)\.wslumis$ balancer://wscluster/$1 stickysession=JSESSIONID|jsessionid
+        ProxyPassMatch ^/(.*\.(?:jsp|lumis))$ balancer://ajpcluster/$1 stickysession=JSESSIONID|jsessionid
+</VirtualHost>

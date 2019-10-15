@@ -1,0 +1,29 @@
+---
+galaxy_info:
+  role_name: apache
+  author: jeduoliveira
+  description: apache for lumisxp
+  company: jeduoliveira
+  license: MIT
+  min_ansible_version: 2.5
+  platforms:
+    - name: EL
+      versions:
+        - 7
+        - 6
+    - name: Debian
+      versions:
+        - wheezy
+        - jessie
+        - stretch
+    - name: Ubuntu
+      versions:
+        - precise
+        - trusty
+        - xenial
+
+  galaxy_tags:
+    - development
+    - system
+    - web
+    - apache
