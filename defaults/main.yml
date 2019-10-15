@@ -24,7 +24,6 @@ httpd_confs:
     - virtualhost
 
 httpd_server_name: lumis.com.br
-httpd_server_alias: []
     
 httpd_virtualhost:
   - domain: localhost.local
