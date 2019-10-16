@@ -28,10 +28,10 @@
   tags: 
     - httpd
   
-- name: Copy server status conf.
+- name: Copy virtualhosts conf.
   template:
     src: "virtualhost.conf.j2"
-    dest: "/etc/httpd/conf.d/{{ item.domain }}.conf"
+    dest: "{{ httpd_home }}/conf.d/{{ item.domain }}.conf"
     owner: apache
     group: apache
     mode: 0644
@@ -41,13 +41,36 @@
   tags: 
     - httpd
 
-- name: enable servername:80
+- name: enable servername 80
   lineinfile:
-    dest: /etc/httpd/conf/httpd.conf
-    regexp: "^#ServerName www.example.com:80"
+    dest: "{{ httpd_home }}/conf/httpd.conf"
+    regexp: "^ServerName localhost:80"
     line: "ServerName localhost:80"
     state: present
   notify: restart httpd
   tags: 
     - httpd
+
+- name: Add apache mod mpm worker configuration.
+  template:
+    src: "00-mpm.conf.j2"
+    dest: "{{ httpd_home }}/conf.modules.d/00-mpm.conf"
+    owner: root
+    group: root
+    mode: 0644
+  with_items: "{{httpd_settings}}"
+  notify: restart httpd
+  tags: 
+    - httpd
   
+- name: Add apache vhosts configuration.
+  template:
+    src: "{{ item }}.conf.j2"
+    dest: "{{ httpd_home }}/conf.d/{{ item }}.conf"
+    owner: root
+    group: root
+    mode: 0644
+  with_items: "{{httpd_settings}}"
+  notify: restart httpd
+  tags: 
+    - httpd

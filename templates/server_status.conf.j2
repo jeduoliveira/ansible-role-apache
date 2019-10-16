@@ -2,7 +2,8 @@
 
 ExtendedStatus On
 <VirtualHost *:80>
-        ServerName {{ httpd_server_name_status }}
+        
+        ServerName {{ ansible_host }}
         ServerAlias 127.0.0.1 localhost
         DocumentRoot /var/www/html
 
