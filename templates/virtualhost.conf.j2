@@ -39,7 +39,11 @@
 
         <Proxy balancer://ajpcluster>
             {% for member in httpd_balancer_members_ajp %}
-            BalancerMember ajp://{{ member.ip }}:{{ member.port }} route={{ member.route }} connectiontimeout=30 retry=300
+                {% if member.port == 8009 %}
+                    BalancerMember ajp://{{ member.ip }}:{{ member.port }} route={{ member.route }} connectiontimeout=30 retry=300
+                {% else %}
+                    BalancerMember http://{{ member.ip }}:{{ member.port }} route={{ member.route }} connectiontimeout=30 retry=300
+                {% endif %}
             {% endfor %}
         
         </Proxy>
@@ -47,8 +51,7 @@
         <Proxy balancer://wscluster>
             {% for member in httpd_balancer_members_http %}
             BalancerMember ws://{{ member.ip }}:{{ member.port }} route={{ member.route }} connectiontimeout=30 retry=300
-            {% endfor %}
-        
+            {% endfor %}        
         </Proxy>
 
         ProxyPreserveHost On
